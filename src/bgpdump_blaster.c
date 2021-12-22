@@ -1177,6 +1177,7 @@ bgpdump_connect_session_cb (struct timer_ *timer)
     if (!protoent) {
         return;
     }
+ reconnect:
     session->sockfd = socket(af, SOCK_STREAM, protoent->p_proto);
     if (session->sockfd == -1) {
         return;
@@ -1239,7 +1240,9 @@ bgpdump_connect_session_cb (struct timer_ *timer)
 		    /* Check the return value */
 		    if (valopt) {
 			LOG(ERROR, "Error in delayed connection() %d - %s\n", valopt, strerror(valopt));
-			exit(0);
+			close(session->sockfd);
+			sleep(1);
+			goto reconnect;
 		    }
 
 		    LOG(NORMAL, "Socket to %s is writeable\n", blaster_addr);
